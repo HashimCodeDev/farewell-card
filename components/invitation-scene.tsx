@@ -1,29 +1,22 @@
 "use client";
 
-import { Suspense, useEffect, useRef, type MutableRefObject } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { ContactShadows, RoundedBox, useTexture } from "@react-three/drei";
+import { useGesture } from "@use-gesture/react";
 import * as THREE from "three";
 
 type InvitationSceneProps = {
-    isFlipped: boolean;
-    onToggleFlip: () => void;
     isMobile: boolean;
 };
 
 type CardMeshProps = {
-    isFlipped: boolean;
-    onToggleFlip: () => void;
-    parallaxTilt: MutableRefObject<{ x: number; y: number }>;
-    isMobile: boolean;
+    rotationTarget: React.MutableRefObject<{ x: number; y: number }>;
+    inertia: React.MutableRefObject<{ x: number; y: number }>;
+    isDragging: React.MutableRefObject<boolean>;
 };
 
-function InvitationCard({
-    isFlipped,
-    onToggleFlip,
-    parallaxTilt,
-    isMobile,
-}: CardMeshProps) {
+function InvitationCard({ rotationTarget, inertia, isDragging }: CardMeshProps) {
     const cardRef = useRef<THREE.Group>(null);
     const frontLayerRef = useRef<THREE.Mesh>(null);
     const backLayerRef = useRef<THREE.Mesh>(null);
@@ -31,22 +24,60 @@ function InvitationCard({
     const backTexture = useTexture("/card-back.png");
     const frontTexture = useTexture("/card-front.png");
 
+    useEffect(() => {
+        frontTexture.colorSpace = THREE.SRGBColorSpace;
+        backTexture.colorSpace = THREE.SRGBColorSpace;
+        frontTexture.anisotropy = 8;
+        backTexture.anisotropy = 8;
+    }, [frontTexture, backTexture]);
+
     useFrame((state, delta) => {
         if (!cardRef.current) {
             return;
         }
 
         const card = cardRef.current;
-        const targetRotation = isFlipped ? Math.PI : 0;
-        const targetY = 0;
+        // Inertia feeds target rotation after release, then decays each frame.
+        if (!isDragging.current) {
+            rotationTarget.current.x = THREE.MathUtils.clamp(
+                rotationTarget.current.x + inertia.current.x,
+                -0.62,
+                0.62,
+            );
+            rotationTarget.current.y = THREE.MathUtils.clamp(
+                rotationTarget.current.y + inertia.current.y,
+                -Math.PI,
+                Math.PI,
+            );
 
-        card.rotation.y = THREE.MathUtils.damp(card.rotation.y, targetRotation, 9.4, delta);
-        card.position.y = THREE.MathUtils.damp(card.position.y, targetY, 9.4, delta);
+            const decay = Math.pow(0.9, delta * 60);
+            inertia.current.x *= decay;
+            inertia.current.y *= decay;
+        }
 
-        const xInput = isMobile ? parallaxTilt.current.x : state.pointer.x;
-        const yInput = isMobile ? parallaxTilt.current.y : state.pointer.y;
+        // Damping gives weighted, smooth motion from current to target rotation.
+        card.rotation.x = THREE.MathUtils.damp(
+            card.rotation.x,
+            rotationTarget.current.x,
+            10,
+            delta,
+        );
+        card.rotation.y = THREE.MathUtils.damp(
+            card.rotation.y,
+            rotationTarget.current.y,
+            10,
+            delta,
+        );
 
-        // Move layered meshes subtly to mimic collage depth without overdoing motion.
+        // Floating motion appears only when idle so interaction stays precise.
+        const floatY = isDragging.current ? 0 : Math.sin(state.clock.elapsedTime * 1.1) * 0.045;
+        const floatZ = isDragging.current ? 0 : Math.sin(state.clock.elapsedTime * 0.7) * 0.014;
+        card.position.y = THREE.MathUtils.damp(card.position.y, floatY, 4.8, delta);
+        card.rotation.z = THREE.MathUtils.damp(card.rotation.z, floatZ, 4.8, delta);
+
+        const yInput = THREE.MathUtils.clamp(card.rotation.y / Math.PI, -1, 1);
+        const xInput = THREE.MathUtils.clamp(card.rotation.x / 0.62, -1, 1);
+
         if (frontLayerRef.current) {
             frontLayerRef.current.position.z = THREE.MathUtils.damp(
                 frontLayerRef.current.position.z,
@@ -57,8 +88,8 @@ function InvitationCard({
         }
 
         if (backLayerRef.current) {
-            const targetX = isFlipped ? xInput * 0.03 : 0;
-            const targetY = isFlipped ? yInput * 0.03 : 0;
+            const targetX = xInput * 0.03;
+            const targetY = yInput * 0.03;
             backLayerRef.current.position.x = THREE.MathUtils.damp(
                 backLayerRef.current.position.x,
                 targetX,
@@ -74,8 +105,8 @@ function InvitationCard({
         }
 
         if (glowLayerRef.current) {
-            const glowX = isFlipped ? xInput * 0.05 : 0;
-            const glowY = isFlipped ? yInput * 0.05 : 0;
+            const glowX = xInput * 0.05;
+            const glowY = yInput * 0.05;
             glowLayerRef.current.position.x = THREE.MathUtils.damp(
                 glowLayerRef.current.position.x,
                 glowX,
@@ -92,11 +123,11 @@ function InvitationCard({
     });
 
     return (
-        <group ref={cardRef} onClick={onToggleFlip}>
+        <group ref={cardRef}>
             <RoundedBox
                 args={[3.16, 2.04, 0.06]}
                 radius={0.08}
-                smoothness={8}
+                smoothness={6}
                 castShadow
                 receiveShadow
             >
@@ -147,40 +178,74 @@ function InvitationCard({
 }
 
 export function InvitationScene({
-    isFlipped,
-    onToggleFlip,
     isMobile,
 }: InvitationSceneProps) {
-    const parallaxTilt = useRef({ x: 0, y: 0 });
+    const sceneContainerRef = useRef<HTMLDivElement>(null);
+    const rotationTarget = useRef({ x: 0, y: 0 });
+    const inertia = useRef({ x: 0, y: 0 });
+    const isDragging = useRef(false);
+    const dragStart = useRef({ x: 0, y: 0 });
 
-    useEffect(() => {
-        const handleDeviceOrientation = (event: DeviceOrientationEvent) => {
-            const gamma = event.gamma ?? 0;
-            const beta = event.beta ?? 0;
+    useGesture(
+        {
+            onDrag: ({ first, movement: [mx, my], delta: [dx, dy], timeDelta, last }) => {
+                const rotateSpeed = 0.0058;
 
-            parallaxTilt.current = {
-                x: THREE.MathUtils.clamp(gamma / 45, -1, 1),
-                y: THREE.MathUtils.clamp(beta / 55, -1, 1),
-            };
-        };
+                if (first) {
+                    isDragging.current = true;
+                    dragStart.current.x = rotationTarget.current.x;
+                    dragStart.current.y = rotationTarget.current.y;
+                    inertia.current.x = 0;
+                    inertia.current.y = 0;
+                }
 
-        window.addEventListener("deviceorientation", handleDeviceOrientation, true);
-        return () =>
-            window.removeEventListener("deviceorientation", handleDeviceOrientation, true);
-    }, []);
+                // Gesture movement maps directly to 3D rotation targets.
+                rotationTarget.current.y = THREE.MathUtils.clamp(
+                    dragStart.current.y + mx * rotateSpeed,
+                    -Math.PI,
+                    Math.PI,
+                );
+                rotationTarget.current.x = THREE.MathUtils.clamp(
+                    dragStart.current.x + my * rotateSpeed,
+                    -0.62,
+                    0.62,
+                );
+
+                if (last) {
+                    isDragging.current = false;
+
+                    // Use final drag speed to inject a tiny post-release inertia.
+                    const dt = Math.max(timeDelta, 16);
+                    inertia.current.y = THREE.MathUtils.clamp((dx / dt) * 0.034, -0.035, 0.035);
+                    inertia.current.x = THREE.MathUtils.clamp((dy / dt) * 0.034, -0.02, 0.02);
+                }
+            },
+        },
+        {
+            target: sceneContainerRef,
+            drag: {
+                filterTaps: true,
+                threshold: 2,
+                pointer: {
+                    touch: true,
+                },
+            },
+        },
+    );
 
     return (
-        <div className="scene-frame">
+        <div ref={sceneContainerRef} className="scene-frame" style={{ touchAction: "none" }}>
             <Canvas
                 camera={{ position: [0, 0.2, 4.5], fov: 38 }}
                 dpr={isMobile ? [1, 1.5] : [1, 2]}
+                gl={{ antialias: true, powerPreference: "high-performance" }}
                 shadows="basic"
             >
                 <Suspense fallback={null}>
-                    <ambientLight intensity={0.62} color="#f5e8d2" />
+                    <ambientLight intensity={0.52} color="#f5e8d2" />
                     <directionalLight
                         position={[2.6, 3.4, 3.8]}
-                        intensity={1.24}
+                        intensity={1.16}
                         color="#ffd9a0"
                         castShadow
                         shadow-mapSize-width={1024}
@@ -188,15 +253,14 @@ export function InvitationScene({
                     />
                     <directionalLight
                         position={[-3, -1.4, 2]}
-                        intensity={0.32}
+                        intensity={0.28}
                         color="#e5cda2"
                     />
 
                     <InvitationCard
-                        isFlipped={isFlipped}
-                        onToggleFlip={onToggleFlip}
-                        parallaxTilt={parallaxTilt}
-                        isMobile={isMobile}
+                        rotationTarget={rotationTarget}
+                        inertia={inertia}
+                        isDragging={isDragging}
                     />
 
                     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.4, 0]} receiveShadow>

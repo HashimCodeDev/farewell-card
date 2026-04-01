@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
-import { useGesture } from "@use-gesture/react";
 import { useEffect, useMemo, useState } from "react";
 
 const InvitationScene = dynamic(
@@ -67,7 +66,6 @@ export function FarewellExperience() {
     const [isMobile, setIsMobile] = useState<boolean | null>(null);
     const [isEnvelopeOpen, setIsEnvelopeOpen] = useState(false);
     const [isCardVisible, setIsCardVisible] = useState(false);
-    const [isFlipped, setIsFlipped] = useState(false);
 
     useEffect(() => {
         const media = window.matchMedia("(max-width: 768px)");
@@ -89,38 +87,6 @@ export function FarewellExperience() {
 
         return () => window.clearTimeout(timer);
     }, [isEnvelopeOpen]);
-
-    const bindSwipe = useGesture(
-        {
-            onDrag: ({ swipe: [swipeX], movement: [moveX], last }) => {
-                if (!isCardVisible) {
-                    return;
-                }
-
-                if (swipeX === -1 || (last && moveX < -40)) {
-                    setIsFlipped(true);
-                }
-
-                if (swipeX === 1 || (last && moveX > 40)) {
-                    setIsFlipped(false);
-                }
-            },
-        },
-        {
-            drag: {
-                axis: "x",
-                filterTaps: true,
-                threshold: 6,
-                swipe: {
-                    distance: 36,
-                    velocity: 0.14,
-                },
-                pointer: {
-                    touch: true,
-                },
-            },
-        },
-    );
 
     return (
         <main className="farewell-root">
@@ -151,8 +117,7 @@ export function FarewellExperience() {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5, delay: 0.18 }}
                 >
-                    Tap the envelope to open your invitation. Click or swipe on the card to
-                    turn it over.
+                    Open the envelope, then drag the invitation to rotate it freely in 3D.
                 </motion.p>
 
                 <motion.div
@@ -183,13 +148,9 @@ export function FarewellExperience() {
                         }
                         transition={{ duration: 0.56, ease: [0.2, 0.76, 0.2, 1] }}
                     >
-                        <div className="card-gesture-layer" {...bindSwipe()}>
+                        <div className="card-gesture-layer">
                             {isCardVisible && (
-                                <InvitationScene
-                                    isFlipped={isFlipped}
-                                    onToggleFlip={() => setIsFlipped((current) => !current)}
-                                    isMobile={Boolean(isMobile)}
-                                />
+                                <InvitationScene isMobile={Boolean(isMobile)} />
                             )}
                         </div>
                     </motion.div>
