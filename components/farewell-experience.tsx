@@ -137,26 +137,26 @@ export function FarewellExperience() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.55, delay: 0.12 }}
                 >
-                    <div className={`envelope-shell ${isEnvelopeOpen ? "is-open" : ""}`}>
-                        <div className={`card-stage-wrap ${isCardVisible ? "is-active" : ""}`}>
-                            <motion.div
-                                className={`card-stage ${isCardVisible ? "is-active" : ""}`}
-                                initial={false}
-                                animate={
-                                    isCardVisible
-                                        ? { opacity: 1, y: 0, scale: 1 }
-                                        : { opacity: 0, y: 72, scale: 0.9 }
-                                }
-                                transition={{ duration: 0.7, ease: [0.24, 0.78, 0.2, 1] }}
-                            >
-                                <div className={`card-gesture-layer ${isCardVisible ? "is-active" : ""}`}>
-                                    {isCardVisible && (
-                                        <InvitationScene isMobile={Boolean(isMobile)} />
-                                    )}
-                                </div>
-                            </motion.div>
-                        </div>
+                    <div className={`card-stage-wrap ${isCardVisible ? "is-active" : ""}`}>
+                        <motion.div
+                            className={`card-stage ${isCardVisible ? "is-active" : ""}`}
+                            initial={false}
+                            animate={
+                                isCardVisible
+                                    ? { opacity: 1, y: 0, scale: 1 }
+                                    : { opacity: 0, y: 72, scale: 0.9 }
+                            }
+                            transition={{ duration: 0.7, ease: [0.24, 0.78, 0.2, 1] }}
+                        >
+                            <div className={`card-gesture-layer ${isCardVisible ? "is-active" : ""}`}>
+                                {isCardVisible && (
+                                    <InvitationScene isMobile={Boolean(isMobile)} />
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
 
+                    <div className={`envelope-shell ${isEnvelopeOpen ? "is-open" : ""}`}>
                         <button
                             type="button"
                             className="envelope"
