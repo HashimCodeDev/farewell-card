@@ -86,20 +86,23 @@ body::before {
 .envelope-stage {
   position: relative;
   margin-top: clamp(0.6rem, 2vw, 1.2rem);
-  width: min(94vw, 680px);
-  min-height: min(75vh, 620px);
-  display: grid;
-  justify-items: center;
-  align-content: start;
+  width: min(96vw, 980px);
+  min-height: clamp(430px, 72vh, 760px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.35rem, 1.6vw, 1rem);
+  overflow: hidden;
   perspective: 1450px;
-  perspective-origin: 50% 24%;
+  perspective-origin: 50% 32%;
 }
 
 .envelope-shell {
   position: relative;
-  width: min(88vw, 340px);
+  width: clamp(270px, 34vw, 360px);
+  max-width: 100%;
   aspect-ratio: 1.45;
-  margin-top: 0.5rem;
+  margin-top: 0;
   display: grid;
   place-items: end center;
   perspective: 1200px;
@@ -256,7 +259,9 @@ body::before {
 .card-stage-wrap {
   position: absolute;
   left: 50%;
-  bottom: 22%;
+  bottom: clamp(16%, 19%, 24%);
+  width: min(94vw, 760px, calc(62vh * 1.45));
+  max-width: min(94vw, 760px, calc(62vh * 1.45));
   transform: translateX(-50%);
   z-index: 3;
   pointer-events: none;
@@ -268,6 +273,8 @@ body::before {
 
 .card-stage {
   width: min(94vw, 760px);
+  max-width: 100%;
+  max-height: min(62vh, 520px);
   aspect-ratio: 1.45;
   touch-action: pan-y;
   transform-origin: 50% 100%;
@@ -282,6 +289,9 @@ body::before {
 .card-gesture-layer {
   width: 100%;
   height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   touch-action: none;
   pointer-events: none;
 }
@@ -292,20 +302,56 @@ body::before {
 
 .scene-frame canvas {
   touch-action: none;
+  image-rendering: auto;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .scene-frame {
   width: 100%;
   height: 100%;
-  border-radius: 24px;
+  border-radius: 28px;
   overflow: hidden;
+  transform: translateZ(0);
   background:
-    radial-gradient(circle at 50% 32%, rgba(255, 237, 208, 0.5), rgba(185, 151, 116, 0.19) 55%, transparent 80%),
-    linear-gradient(150deg, rgba(255, 255, 255, 0.3), rgba(112, 81, 54, 0.18));
-  border: 1px solid rgba(117, 88, 61, 0.28);
+    radial-gradient(circle at 50% 22%, rgba(255, 247, 233, 0.7), rgba(198, 166, 131, 0.2) 56%, transparent 80%),
+    linear-gradient(152deg, rgba(255, 255, 255, 0.4), rgba(121, 90, 61, 0.14));
+  border: 1px solid rgba(255, 247, 233, 0.58);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    0 24px 44px rgba(45, 29, 17, 0.2);
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    inset 0 -18px 24px rgba(84, 56, 34, 0.08),
+    0 24px 42px rgba(45, 29, 17, 0.17);
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.75, 0.22, 1),
+    box-shadow 0.35s cubic-bezier(0.2, 0.75, 0.22, 1);
+}
+
+.scene-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0) 38%);
+  mix-blend-mode: screen;
+}
+
+.scene-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  border: 1px solid rgba(129, 93, 62, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(255, 245, 228, 0.2);
+}
+
+.card-gesture-layer.is-active:hover .scene-frame {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.76),
+    inset 0 -18px 24px rgba(84, 56, 34, 0.1),
+    0 24px 42px rgba(45, 29, 17, 0.18);
 }
 
 .scene-loader {
@@ -376,14 +422,17 @@ body::before {
   }
 
   .envelope-stage {
-    min-height: 66vh;
+    min-height: clamp(380px, 66vh, 560px);
   }
 
   .card-stage-wrap {
     bottom: 18%;
+    width: min(96vw, 640px, calc(54vh * 1.45));
+    max-width: min(96vw, 640px, calc(54vh * 1.45));
   }
 
   .card-stage {
     width: min(96vw, 640px);
+    max-height: min(54vh, 420px);
   }
 }
