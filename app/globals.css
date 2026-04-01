@@ -91,17 +91,36 @@ body::before {
   display: grid;
   justify-items: center;
   align-content: start;
+  perspective: 1450px;
+  perspective-origin: 50% 24%;
+}
+
+.envelope-shell {
+  position: relative;
+  width: min(88vw, 340px);
+  aspect-ratio: 1.45;
+  margin-top: 0.5rem;
+  display: grid;
+  place-items: end center;
+  perspective: 1200px;
+  transform-style: preserve-3d;
 }
 
 .envelope {
   position: relative;
-  width: min(88vw, 340px);
-  aspect-ratio: 1.45;
+  width: 100%;
+  height: 100%;
   border: 0;
   background: transparent;
   cursor: pointer;
-  margin-top: 0.5rem;
+  isolation: isolate;
   transform-style: preserve-3d;
+  will-change: transform;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.envelope:disabled {
+  cursor: default;
 }
 
 .envelope-shadow {
@@ -111,8 +130,12 @@ body::before {
   border-radius: 999px;
   filter: blur(10px);
   background: rgba(46, 30, 17, 0.35);
+  z-index: 0;
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.72s cubic-bezier(0.26, 0.72, 0.2, 1);
 }
 
+.envelope-back,
 .envelope-front,
 .envelope-flap {
   position: absolute;
@@ -120,15 +143,33 @@ body::before {
   transform: translateX(-50%);
   width: 100%;
   border: 1px solid color-mix(in oklab, var(--gold) 56%, #fff 44%);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
   box-shadow:
     0 20px 35px rgba(0, 0, 0, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.envelope-back {
+  bottom: 0;
+  height: 70%;
+  border-radius: 14px 14px 18px 18px;
+  background:
+    linear-gradient(162deg, #f1e4ce 0%, #e2cbad 55%, #d4b491 100%),
+    radial-gradient(circle at 18% 26%, rgba(255, 255, 255, 0.34), transparent 40%);
+  transform: translateX(-50%) translateZ(1px);
+  z-index: 1;
 }
 
 .envelope-front {
   bottom: 0;
   height: 70%;
   border-radius: 0 0 16px 16px;
+  transform: translateX(-50%) translateZ(5px);
+  z-index: 5;
+  overflow: hidden;
   background:
     linear-gradient(145deg, #ecdcc4 0%, #dfc6a7 58%, #d1b18e 100%),
     radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.34), transparent 40%);
@@ -144,23 +185,50 @@ body::before {
 }
 
 .envelope-flap {
-  top: 8%;
+  top: 28%;
   height: 46%;
   transform-origin: 50% 0%;
-  clip-path: polygon(0 100%, 50% 0, 100% 100%);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
   background: linear-gradient(180deg, #eedfc8 0%, #dcc2a3 100%);
-  transition: transform 1.2s cubic-bezier(0.2, 0.74, 0.19, 1);
+  transform: translateX(-50%) rotateX(0deg) translateZ(8px);
+  z-index: 7;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition:
+    transform 0.62s cubic-bezier(0.32, 0.04, 0.15, 1),
+    filter 0.62s ease;
 }
 
-.envelope.is-open .envelope-flap {
-  transform: translateX(-50%) rotateX(177deg);
+.envelope-flap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  background: linear-gradient(180deg, rgba(108, 77, 52, 0.28), rgba(239, 220, 194, 0.08));
+  opacity: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: opacity 0.42s ease;
+}
+
+.envelope-shell.is-open .envelope-shadow {
+  transform: translate3d(0, 2px, 0) scaleX(0.92);
+}
+
+.envelope-shell.is-open .envelope-flap {
+  transform: translateX(-50%) rotateX(-120deg) translateZ(12px);
+  filter: brightness(1.02);
+}
+
+.envelope-shell.is-open .envelope-flap::before {
+  opacity: 1;
 }
 
 .seal {
   position: absolute;
   left: 50%;
   bottom: 28%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateZ(16px);
   display: grid;
   place-items: center;
   width: clamp(42px, 9vw, 54px);
@@ -174,19 +242,51 @@ body::before {
   box-shadow:
     inset 0 1px 2px rgba(255, 255, 255, 0.45),
     0 8px 16px rgba(34, 21, 14, 0.28);
+  z-index: 8;
+  transition:
+    opacity 0.28s ease,
+    transform 0.42s cubic-bezier(0.28, 0.7, 0.2, 1);
+}
+
+.envelope-shell.is-open .seal {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-16px) scale(0.86) translateZ(16px);
+}
+
+.card-stage-wrap {
+  position: absolute;
+  left: 50%;
+  bottom: 22%;
+  transform: translateX(-50%);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.card-stage-wrap.is-active {
+  pointer-events: auto;
 }
 
 .card-stage {
   width: min(94vw, 760px);
-  margin-top: clamp(-0.8rem, -1.3vw, -0.2rem);
   aspect-ratio: 1.45;
   touch-action: pan-y;
+  transform-origin: 50% 100%;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.card-stage.is-active {
+  pointer-events: auto;
 }
 
 .card-gesture-layer {
   width: 100%;
   height: 100%;
   touch-action: none;
+  pointer-events: none;
+}
+
+.card-gesture-layer.is-active {
   pointer-events: auto;
 }
 
@@ -279,7 +379,11 @@ body::before {
     min-height: 66vh;
   }
 
+  .card-stage-wrap {
+    bottom: 18%;
+  }
+
   .card-stage {
-    margin-top: -0.2rem;
+    width: min(96vw, 640px);
   }
 }

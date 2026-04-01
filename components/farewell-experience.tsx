@@ -30,6 +30,8 @@ function deterministicNoise(index: number, offset: number) {
     return value - Math.floor(value);
 }
 
+const FLAP_OPEN_DURATION_MS = 620;
+
 function FloatingDust({ count }: { count: number }) {
     const particles = useMemo<DustParticle[]>(() => {
         return Array.from({ length: count }, (_, index) => ({
@@ -78,15 +80,24 @@ export function FarewellExperience() {
 
     useEffect(() => {
         if (!isEnvelopeOpen) {
+            setIsCardVisible(false);
             return;
         }
 
         const timer = window.setTimeout(() => {
             setIsCardVisible(true);
-        }, 620);
+        }, FLAP_OPEN_DURATION_MS);
 
         return () => window.clearTimeout(timer);
     }, [isEnvelopeOpen]);
+
+    const handleOpenEnvelope = () => {
+        if (isEnvelopeOpen) {
+            return;
+        }
+
+        setIsEnvelopeOpen(true);
+    };
 
     return (
         <main className="farewell-root">
@@ -126,34 +137,41 @@ export function FarewellExperience() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.55, delay: 0.12 }}
                 >
-                    <button
-                        type="button"
-                        className={`envelope ${isEnvelopeOpen ? "is-open" : ""}`}
-                        onClick={() => setIsEnvelopeOpen(true)}
-                        aria-label="Open invitation envelope"
-                    >
-                        <span className="envelope-shadow" />
-                        <span className="envelope-flap" />
-                        <span className="envelope-front" />
-                        <span className="seal">NSS</span>
-                    </button>
-
-                    <motion.div
-                        className="card-stage"
-                        initial={{ opacity: 0, y: 36, scale: 0.95 }}
-                        animate={
-                            isCardVisible
-                                ? { opacity: 1, y: 0, scale: 1 }
-                                : { opacity: 0, y: 36, scale: 0.95 }
-                        }
-                        transition={{ duration: 0.56, ease: [0.2, 0.76, 0.2, 1] }}
-                    >
-                        <div className="card-gesture-layer">
-                            {isCardVisible && (
-                                <InvitationScene isMobile={Boolean(isMobile)} />
-                            )}
+                    <div className={`envelope-shell ${isEnvelopeOpen ? "is-open" : ""}`}>
+                        <div className={`card-stage-wrap ${isCardVisible ? "is-active" : ""}`}>
+                            <motion.div
+                                className={`card-stage ${isCardVisible ? "is-active" : ""}`}
+                                initial={false}
+                                animate={
+                                    isCardVisible
+                                        ? { opacity: 1, y: 0, scale: 1 }
+                                        : { opacity: 0, y: 72, scale: 0.9 }
+                                }
+                                transition={{ duration: 0.7, ease: [0.24, 0.78, 0.2, 1] }}
+                            >
+                                <div className={`card-gesture-layer ${isCardVisible ? "is-active" : ""}`}>
+                                    {isCardVisible && (
+                                        <InvitationScene isMobile={Boolean(isMobile)} />
+                                    )}
+                                </div>
+                            </motion.div>
                         </div>
-                    </motion.div>
+
+                        <button
+                            type="button"
+                            className="envelope"
+                            onClick={handleOpenEnvelope}
+                            aria-label="Open invitation envelope"
+                            aria-expanded={isEnvelopeOpen}
+                            disabled={isEnvelopeOpen}
+                        >
+                            <span className="envelope-shadow" />
+                            <span className="envelope-back" />
+                            <span className="envelope-flap" />
+                            <span className="envelope-front" />
+                            <span className="seal">NSS</span>
+                        </button>
+                    </div>
                 </motion.div>
             </section>
         </main>
