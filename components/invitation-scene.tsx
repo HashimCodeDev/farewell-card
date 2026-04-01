@@ -24,6 +24,7 @@ type CardMeshProps = {
 function InvitationCard({ rotationTarget, inertia, isDragging, isHovered }: CardMeshProps) {
     const { gl } = useThree();
     const cardRef = useRef<THREE.Group>(null);
+    const elapsedRef = useRef(0);
     const frontLayerRef = useRef<THREE.Mesh>(null);
     const backLayerRef = useRef<THREE.Mesh>(null);
     const glowLayerRef = useRef<THREE.Mesh>(null);
@@ -54,10 +55,12 @@ function InvitationCard({ rotationTarget, inertia, isDragging, isHovered }: Card
         backTexture.needsUpdate = true;
     }, [frontTexture, backTexture, gl]);
 
-    useFrame((state, delta) => {
+    useFrame((_, delta) => {
         if (!cardRef.current) {
             return;
         }
+
+        elapsedRef.current += delta;
 
         const card = cardRef.current;
         // Inertia feeds target rotation after release, then decays each frame.
@@ -94,10 +97,11 @@ function InvitationCard({ rotationTarget, inertia, isDragging, isHovered }: Card
 
         // Floating motion appears only when idle so interaction stays precise.
         const hoverLift = isHovered.current && !isDragging.current ? 0.012 : 0;
+        const elapsed = elapsedRef.current;
         const floatY = isDragging.current
             ? 0
-            : Math.sin(state.clock.elapsedTime * 1.1) * 0.01 + hoverLift;
-        const floatZ = isDragging.current ? 0 : Math.sin(state.clock.elapsedTime * 0.7) * 0.004;
+            : Math.sin(elapsed * 1.1) * 0.01 + hoverLift;
+        const floatZ = isDragging.current ? 0 : Math.sin(elapsed * 0.7) * 0.004;
         card.position.y = THREE.MathUtils.damp(card.position.y, floatY, 4.8, delta);
         card.rotation.z = THREE.MathUtils.damp(card.rotation.z, floatZ, 4.8, delta);
         const targetScale = isHovered.current && !isDragging.current ? 1.004 : 1;
@@ -248,7 +252,9 @@ export function InvitationScene({
     }, []);
 
     const handleWheelZoom = useCallback((event: WheelEvent<HTMLDivElement>) => {
-        event.preventDefault();
+        if (event.cancelable) {
+            event.preventDefault();
+        }
 
         // Trackpad pinch usually emits ctrl+wheel; regular wheel uses a softer zoom speed.
         const zoomSpeed = event.ctrlKey ? 0.0026 : 0.0015;
@@ -312,7 +318,9 @@ export function InvitationScene({
                 }
             },
             onPinch: ({ offset: [scale], event }) => {
-                event.preventDefault();
+                if (event.cancelable) {
+                    event.preventDefault();
+                }
                 applyZoom(scale);
             },
         },
