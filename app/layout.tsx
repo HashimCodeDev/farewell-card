@@ -27,6 +27,11 @@ const libreBaskerville = Libre_Baskerville({
 export const metadata: Metadata = {
   title: "NSS MEC Farewell 2026",
   description: "A cinematic digital invitation for NSS MEC Farewell 2026",
+  icons: {
+    icon: "/nss-logo.png",
+    shortcut: "/nss-logo.png",
+    apple: "/nss-logo.png",
+  },
 };
 
 export default function RootLayout({
