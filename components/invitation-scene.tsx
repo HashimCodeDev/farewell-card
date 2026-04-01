@@ -1,10 +1,14 @@
 "use client";
 
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import type { WheelEvent } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, RoundedBox, useTexture } from "@react-three/drei";
 import { useGesture } from "@use-gesture/react";
 import * as THREE from "three";
+
+const ZOOM_MIN = 1;
+const ZOOM_MAX = 2;
 
 type InvitationSceneProps = {
     isMobile: boolean;
@@ -227,11 +231,51 @@ export function InvitationScene({
     isMobile,
 }: InvitationSceneProps) {
     const sceneContainerRef = useRef<HTMLDivElement>(null);
+    const [zoomLevel, setZoomLevel] = useState(1);
+    const zoomRef = useRef(1);
+    const wheelRafRef = useRef<number | null>(null);
+    const wheelDeltaRef = useRef(0);
     const rotationTarget = useRef({ x: 0, y: 0 });
     const inertia = useRef({ x: 0, y: 0 });
     const isDragging = useRef(false);
     const isHovered = useRef(false);
     const dragStart = useRef({ x: 0, y: 0 });
+
+    const applyZoom = useCallback((nextZoom: number) => {
+        const clamped = THREE.MathUtils.clamp(nextZoom, ZOOM_MIN, ZOOM_MAX);
+        zoomRef.current = clamped;
+        setZoomLevel(clamped);
+    }, []);
+
+    const handleWheelZoom = useCallback((event: WheelEvent<HTMLDivElement>) => {
+        event.preventDefault();
+
+        // Trackpad pinch usually emits ctrl+wheel; regular wheel uses a softer zoom speed.
+        const zoomSpeed = event.ctrlKey ? 0.0026 : 0.0015;
+        wheelDeltaRef.current += -event.deltaY * zoomSpeed;
+
+        if (wheelRafRef.current !== null) {
+            return;
+        }
+
+        wheelRafRef.current = window.requestAnimationFrame(() => {
+            wheelRafRef.current = null;
+            if (wheelDeltaRef.current === 0) {
+                return;
+            }
+
+            applyZoom(zoomRef.current + wheelDeltaRef.current);
+            wheelDeltaRef.current = 0;
+        });
+    }, [applyZoom]);
+
+    useEffect(() => {
+        return () => {
+            if (wheelRafRef.current !== null) {
+                window.cancelAnimationFrame(wheelRafRef.current);
+            }
+        };
+    }, []);
 
     useGesture(
         {
@@ -267,15 +311,30 @@ export function InvitationScene({
                     inertia.current.x = THREE.MathUtils.clamp((dy / dt) * 0.034, -0.02, 0.02);
                 }
             },
+            onPinch: ({ offset: [scale], event }) => {
+                event.preventDefault();
+                applyZoom(scale);
+            },
         },
         {
             target: sceneContainerRef,
+            eventOptions: {
+                passive: false,
+            },
             drag: {
                 filterTaps: true,
                 threshold: 2,
                 pointer: {
                     touch: true,
                 },
+            },
+            pinch: {
+                scaleBounds: {
+                    min: ZOOM_MIN,
+                    max: ZOOM_MAX,
+                },
+                rubberband: false,
+                from: () => [zoomRef.current, 0],
             },
         },
     );
@@ -285,6 +344,7 @@ export function InvitationScene({
             ref={sceneContainerRef}
             className="scene-frame"
             style={{ touchAction: "none" }}
+            onWheel={handleWheelZoom}
             onPointerEnter={() => {
                 isHovered.current = true;
             }}
@@ -292,62 +352,64 @@ export function InvitationScene({
                 isHovered.current = false;
             }}
         >
-            <div className="scene-surface" aria-hidden />
-            <Canvas
-                camera={{ position: [0, 0.2, 4.5], fov: 38 }}
-                dpr={isMobile ? [1.5, 2.5] : [1.5, 3]}
-                gl={{ antialias: true, powerPreference: "high-performance" }}
-                shadows="basic"
-                onCreated={({ gl: renderer }) => {
-                    renderer.outputColorSpace = THREE.SRGBColorSpace;
-                    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-                    renderer.toneMappingExposure = 1;
-                }}
-            >
-                <Suspense fallback={null}>
-                    <ambientLight intensity={0.56} color="#f8eddf" />
-                    <hemisphereLight intensity={0.24} color="#fffaf2" groundColor="#b79970" />
-                    <directionalLight
-                        position={[1.8, 2.8, 4.2]}
-                        intensity={1.05}
-                        color="#ffe5bf"
-                        castShadow
-                        shadow-mapSize-width={1024}
-                        shadow-mapSize-height={1024}
-                    />
-                    <directionalLight
-                        position={[-2.6, 0.8, 3.2]}
-                        intensity={0.3}
-                        color="#fff0d8"
-                    />
-                    <directionalLight
-                        position={[0, 1.6, -3.2]}
-                        intensity={0.19}
-                        color="#f5d6ac"
-                    />
+            <div className="scene-zoom" style={{ transform: `scale(${zoomLevel})` }}>
+                <div className="scene-surface" aria-hidden />
+                <Canvas
+                    camera={{ position: [0, 0.2, 4.5], fov: 38 }}
+                    dpr={isMobile ? [1.5, 2.5] : [1.5, 3]}
+                    gl={{ antialias: true, powerPreference: "high-performance" }}
+                    shadows="basic"
+                    onCreated={({ gl: renderer }) => {
+                        renderer.outputColorSpace = THREE.SRGBColorSpace;
+                        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                        renderer.toneMappingExposure = 1;
+                    }}
+                >
+                    <Suspense fallback={null}>
+                        <ambientLight intensity={0.56} color="#f8eddf" />
+                        <hemisphereLight intensity={0.24} color="#fffaf2" groundColor="#b79970" />
+                        <directionalLight
+                            position={[1.8, 2.8, 4.2]}
+                            intensity={1.05}
+                            color="#ffe5bf"
+                            castShadow
+                            shadow-mapSize-width={1024}
+                            shadow-mapSize-height={1024}
+                        />
+                        <directionalLight
+                            position={[-2.6, 0.8, 3.2]}
+                            intensity={0.3}
+                            color="#fff0d8"
+                        />
+                        <directionalLight
+                            position={[0, 1.6, -3.2]}
+                            intensity={0.19}
+                            color="#f5d6ac"
+                        />
 
-                    <InvitationCard
-                        rotationTarget={rotationTarget}
-                        inertia={inertia}
-                        isDragging={isDragging}
-                        isHovered={isHovered}
-                    />
+                        <InvitationCard
+                            rotationTarget={rotationTarget}
+                            inertia={inertia}
+                            isDragging={isDragging}
+                            isHovered={isHovered}
+                        />
 
-                    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.4, 0]} receiveShadow>
-                        <planeGeometry args={[10, 10]} />
-                        <shadowMaterial transparent opacity={0.14} />
-                    </mesh>
+                        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.4, 0]} receiveShadow>
+                            <planeGeometry args={[10, 10]} />
+                            <shadowMaterial transparent opacity={0.14} />
+                        </mesh>
 
-                    <ContactShadows
-                        position={[0, -1.05, 0]}
-                        opacity={0.14}
-                        scale={4.7}
-                        blur={4}
-                        far={3.8}
-                        color="#4a331d"
-                    />
-                </Suspense>
-            </Canvas>
+                        <ContactShadows
+                            position={[0, -1.05, 0]}
+                            opacity={0.14}
+                            scale={4.7}
+                            blur={4}
+                            far={3.8}
+                            color="#4a331d"
+                        />
+                    </Suspense>
+                </Canvas>
+            </div>
         </div>
     );
 }
