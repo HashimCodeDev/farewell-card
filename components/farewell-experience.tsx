@@ -32,12 +32,6 @@ function deterministicNoise(index: number, offset: number) {
 }
 
 function FloatingDust({ count }: { count: number }) {
-    const [isMounted, setIsMounted] = useState(false);
-
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
-
     const particles = useMemo<DustParticle[]>(() => {
         return Array.from({ length: count }, (_, index) => ({
             id: index,
@@ -48,10 +42,6 @@ function FloatingDust({ count }: { count: number }) {
             duration: 0.46 + deterministicNoise(index, 5) * 0.12,
         }));
     }, [count]);
-
-    if (!isMounted) {
-        return null;
-    }
 
     return (
         <div className="dust-layer" aria-hidden>
@@ -74,7 +64,7 @@ function FloatingDust({ count }: { count: number }) {
 }
 
 export function FarewellExperience() {
-    const [isMobile, setIsMobile] = useState(false);
+    const [isMobile, setIsMobile] = useState<boolean | null>(null);
     const [isEnvelopeOpen, setIsEnvelopeOpen] = useState(false);
     const [isCardVisible, setIsCardVisible] = useState(false);
     const [isFlipped, setIsFlipped] = useState(false);
@@ -128,7 +118,7 @@ export function FarewellExperience() {
 
     return (
         <main className="farewell-root">
-            <FloatingDust count={isMobile ? 12 : 28} />
+            {isMobile !== null && <FloatingDust count={isMobile ? 12 : 28} />}
             <div className="vignette" aria-hidden />
             <section className="content-shell">
                 <motion.p
@@ -192,7 +182,7 @@ export function FarewellExperience() {
                                 <InvitationScene
                                     isFlipped={isFlipped}
                                     onToggleFlip={() => setIsFlipped((current) => !current)}
-                                    isMobile={isMobile}
+                                    isMobile={Boolean(isMobile)}
                                 />
                             )}
                         </div>

@@ -145,7 +145,7 @@ export function InvitationScene({
             <Canvas
                 camera={{ position: [0, 0.2, 4.5], fov: 38 }}
                 dpr={isMobile ? [1, 1.5] : [1, 2]}
-                shadows={THREE.PCFShadowMap}
+                shadows="basic"
             >
                 <Suspense fallback={null}>
                     <ambientLight intensity={0.62} color="#f5e8d2" />
