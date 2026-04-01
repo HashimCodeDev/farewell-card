@@ -16,7 +16,9 @@
 }
 
 body {
+  margin: 0;
   min-height: 100vh;
+  overflow-x: hidden;
   background: radial-gradient(circle at 12% 16%, #f2e5cc 0%, var(--parchment) 42%, #ccb191 100%);
   color: var(--ink);
   font-family: var(--font-body), serif;
@@ -50,11 +52,16 @@ body::before {
 .content-shell {
   position: relative;
   z-index: 4;
-  display: grid;
-  justify-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   gap: 1.1rem;
+  width: 100%;
+  max-width: 100%;
   min-height: 100vh;
   padding: clamp(2.2rem, 4vw, 4rem) 1.3rem 1.8rem;
+  box-sizing: border-box;
   text-align: center;
 }
 
@@ -85,14 +92,16 @@ body::before {
 
 .envelope-stage {
   position: relative;
-  margin-top: clamp(0.6rem, 2vw, 1.2rem);
-  width: min(96vw, 980px);
-  min-height: clamp(430px, 72vh, 760px);
+  margin: clamp(0.6rem, 2vw, 1.2rem) auto 0;
+  width: 100%;
+  max-width: min(96vw, 980px);
+  min-height: clamp(500px, 76vh, 820px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(0.35rem, 1.6vw, 1rem);
-  overflow: hidden;
+  padding: clamp(1.2rem, 3vw, 2.2rem) clamp(0.35rem, 1.6vw, 1rem) clamp(0.5rem, 1.6vw, 1rem);
+  box-sizing: border-box;
+  overflow: visible;
   perspective: 1450px;
   perspective-origin: 50% 32%;
 }
@@ -105,6 +114,7 @@ body::before {
   margin-top: 0;
   display: grid;
   place-items: end center;
+  overflow: visible;
   perspective: 1200px;
   transform-style: preserve-3d;
 }
@@ -258,16 +268,19 @@ body::before {
 
 .card-stage-wrap {
   position: absolute;
-  left: 50%;
+  left: 0;
+  right: 0;
   bottom: clamp(16%, 19%, 24%);
   width: min(94vw, 760px, calc(62vh * 1.45));
   max-width: min(94vw, 760px, calc(62vh * 1.45));
-  transform: translateX(-50%);
-  z-index: 3;
+  margin: 0 auto;
+  z-index: 4;
+  overflow: visible;
   pointer-events: none;
 }
 
 .card-stage-wrap.is-active {
+  z-index: 10;
   pointer-events: auto;
 }
 
@@ -276,6 +289,7 @@ body::before {
   max-width: 100%;
   max-height: min(62vh, 520px);
   aspect-ratio: 1.45;
+  overflow: visible;
   touch-action: pan-y;
   transform-origin: 50% 100%;
   will-change: transform, opacity;
@@ -301,6 +315,8 @@ body::before {
 }
 
 .scene-frame canvas {
+  position: relative;
+  z-index: 2;
   touch-action: none;
   image-rendering: auto;
   transform: translateZ(0);
@@ -308,11 +324,24 @@ body::before {
 }
 
 .scene-frame {
+  position: relative;
   width: 100%;
   height: 100%;
   border-radius: 28px;
-  overflow: hidden;
+  overflow: visible;
   transform: translateZ(0);
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.75, 0.22, 1),
+    box-shadow 0.35s cubic-bezier(0.2, 0.75, 0.22, 1);
+}
+
+.scene-surface {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
   background:
     radial-gradient(circle at 50% 22%, rgba(255, 247, 233, 0.7), rgba(198, 166, 131, 0.2) 56%, transparent 80%),
     linear-gradient(152deg, rgba(255, 255, 255, 0.4), rgba(121, 90, 61, 0.14));
@@ -321,12 +350,9 @@ body::before {
     inset 0 1px 0 rgba(255, 255, 255, 0.72),
     inset 0 -18px 24px rgba(84, 56, 34, 0.08),
     0 24px 42px rgba(45, 29, 17, 0.17);
-  transition:
-    transform 0.35s cubic-bezier(0.2, 0.75, 0.22, 1),
-    box-shadow 0.35s cubic-bezier(0.2, 0.75, 0.22, 1);
 }
 
-.scene-frame::before {
+.scene-surface::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -336,7 +362,7 @@ body::before {
   mix-blend-mode: screen;
 }
 
-.scene-frame::after {
+.scene-surface::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -348,6 +374,9 @@ body::before {
 
 .card-gesture-layer.is-active:hover .scene-frame {
   transform: translateY(-1px);
+}
+
+.card-gesture-layer.is-active:hover .scene-surface {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.76),
     inset 0 -18px 24px rgba(84, 56, 34, 0.1),
@@ -422,7 +451,10 @@ body::before {
   }
 
   .envelope-stage {
-    min-height: clamp(380px, 66vh, 560px);
+    width: 100%;
+    max-width: 96vw;
+    min-height: clamp(430px, 70vh, 620px);
+    padding-top: clamp(1rem, 4vw, 1.6rem);
   }
 
   .card-stage-wrap {

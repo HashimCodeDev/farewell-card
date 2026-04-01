@@ -292,6 +292,7 @@ export function InvitationScene({
                 isHovered.current = false;
             }}
         >
+            <div className="scene-surface" aria-hidden />
             <Canvas
                 camera={{ position: [0, 0.2, 4.5], fov: 38 }}
                 dpr={isMobile ? [1.5, 2.5] : [1.5, 3]}
