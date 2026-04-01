@@ -25,6 +25,7 @@ function InvitationCard({
     isMobile,
 }: CardMeshProps) {
     const cardRef = useRef<THREE.Group>(null);
+    const frontLayerRef = useRef<THREE.Mesh>(null);
     const backLayerRef = useRef<THREE.Mesh>(null);
     const glowLayerRef = useRef<THREE.Mesh>(null);
     const backTexture = useTexture("/card-back.png");
@@ -46,6 +47,15 @@ function InvitationCard({
         const yInput = isMobile ? parallaxTilt.current.y : state.pointer.y;
 
         // Move layered meshes subtly to mimic collage depth without overdoing motion.
+        if (frontLayerRef.current) {
+            frontLayerRef.current.position.z = THREE.MathUtils.damp(
+                frontLayerRef.current.position.z,
+                0.034,
+                9.2,
+                delta,
+            );
+        }
+
         if (backLayerRef.current) {
             const targetX = isFlipped ? xInput * 0.03 : 0;
             const targetY = isFlipped ? yInput * 0.03 : 0;
@@ -94,16 +104,35 @@ function InvitationCard({
                 <meshStandardMaterial color="#c3ae90" roughness={0.9} metalness={0} />
                 <meshStandardMaterial color="#c3ae90" roughness={0.9} metalness={0} />
                 <meshStandardMaterial color="#c3ae90" roughness={0.9} metalness={0} />
-                <meshStandardMaterial map={frontTexture} roughness={0.82} metalness={0} />
+                <meshStandardMaterial color="#ead8bd" roughness={0.92} metalness={0} />
                 <meshStandardMaterial color="#ead8bd" roughness={0.92} metalness={0} />
             </RoundedBox>
 
-            <mesh ref={backLayerRef} position={[0, 0, -0.034]}>
+            <mesh ref={frontLayerRef} position={[0, 0, 0.034]}>
                 <planeGeometry args={[2.93, 1.82]} />
-                <meshStandardMaterial map={backTexture} roughness={0.84} metalness={0} />
+                <meshStandardMaterial
+                    map={frontTexture}
+                    roughness={0.82}
+                    metalness={0}
+                    polygonOffset
+                    polygonOffsetFactor={-1}
+                    polygonOffsetUnits={-1}
+                />
             </mesh>
 
-            <mesh ref={glowLayerRef} position={[0, 0, -0.031]}>
+            <mesh ref={backLayerRef} position={[0, 0, -0.034]} rotation={[0, Math.PI, 0]}>
+                <planeGeometry args={[2.93, 1.82]} />
+                <meshStandardMaterial
+                    map={backTexture}
+                    roughness={0.84}
+                    metalness={0}
+                    polygonOffset
+                    polygonOffsetFactor={-1}
+                    polygonOffsetUnits={-1}
+                />
+            </mesh>
+
+            <mesh ref={glowLayerRef} position={[0, 0, -0.031]} rotation={[0, Math.PI, 0]}>
                 <planeGeometry args={[2.95, 1.84]} />
                 <meshStandardMaterial
                     transparent
