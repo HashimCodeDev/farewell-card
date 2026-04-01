@@ -99,7 +99,6 @@ body::before {
   max-width: min(96vw, 980px);
   min-height: clamp(500px, 76vh, 820px);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: clamp(1.2rem, 3vw, 2.2rem) clamp(0.35rem, 1.6vw, 1rem) clamp(0.5rem, 1.6vw, 1rem);
@@ -113,7 +112,6 @@ body::before {
   position: relative;
   width: clamp(270px, 34vw, 360px);
   max-width: 100%;
-  margin-inline: auto;
   aspect-ratio: 1.45;
   margin-top: 0;
   display: grid;
@@ -275,8 +273,8 @@ body::before {
   left: 0;
   right: 0;
   bottom: clamp(16%, 19%, 24%);
-  width: min(94vw, 760px, calc(62vh * 1.45));
-  max-width: min(94vw, 760px, calc(62vh * 1.45));
+  width: 100%;
+  max-width: min(100%, 760px);
   margin: 0 auto;
   z-index: 4;
   overflow: visible;
@@ -289,7 +287,7 @@ body::before {
 }
 
 .card-stage {
-  width: min(94vw, 760px);
+  width: 100%;
   max-width: 100%;
   max-height: min(62vh, 520px);
   aspect-ratio: 1.45;
@@ -457,19 +455,19 @@ body::before {
 
   .envelope-stage {
     width: 100%;
-    max-width: min(92vw, 600px);
+    max-width: 420px;
     min-height: clamp(430px, 70vh, 620px);
     padding-top: clamp(1rem, 4vw, 1.6rem);
   }
 
   .card-stage-wrap {
     bottom: 18%;
-    width: min(92vw, 600px, calc(54vh * 1.45));
-    max-width: min(92vw, 600px, calc(54vh * 1.45));
+    width: 100%;
+    max-width: 100%;
   }
 
   .card-stage {
-    width: min(92vw, 600px);
+    width: 100%;
     max-height: min(54vh, 420px);
   }
 }
