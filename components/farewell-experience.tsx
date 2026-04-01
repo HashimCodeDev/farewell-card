@@ -92,14 +92,16 @@ export function FarewellExperience() {
 
     const bindSwipe = useGesture(
         {
-            onDrag: ({ swipe: [swipeX] }) => {
+            onDrag: ({ swipe: [swipeX], movement: [moveX], last }) => {
                 if (!isCardVisible) {
                     return;
                 }
-                if (swipeX === -1) {
+
+                if (swipeX === -1 || (last && moveX < -40)) {
                     setIsFlipped(true);
                 }
-                if (swipeX === 1) {
+
+                if (swipeX === 1 || (last && moveX > 40)) {
                     setIsFlipped(false);
                 }
             },
@@ -108,9 +110,13 @@ export function FarewellExperience() {
             drag: {
                 axis: "x",
                 filterTaps: true,
+                threshold: 6,
                 swipe: {
-                    distance: 52,
-                    velocity: 0.2,
+                    distance: 36,
+                    velocity: 0.14,
+                },
+                pointer: {
+                    touch: true,
                 },
             },
         },
