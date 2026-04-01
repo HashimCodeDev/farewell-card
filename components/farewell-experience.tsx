@@ -8,11 +8,7 @@ const InvitationScene = dynamic(
     () => import("@/components/invitation-scene").then((mod) => mod.InvitationScene),
     {
         ssr: false,
-        loading: () => (
-            <div className="scene-loader">
-                <span>Preparing the invitation</span>
-            </div>
-        ),
+        loading: () => null,
     },
 );
 
