@@ -35,9 +35,10 @@ export const metadata: Metadata = {
     siteName: "NSS MEC Farewell",
     images: [
       {
-        url: "/preview-og.jpg?v=20260401",
+        url: "/preview-wa.jpg",
         width: 1200,
         height: 630,
+        type: "image/jpeg",
         alt: "NSS MEC Farewell Invitation",
       },
     ],
@@ -47,7 +48,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "NSS MEC – Farewell 2026",
     description: "Open the envelope to view your invitation.",
-    images: ["/preview-og.jpg?v=20260401"],
+    images: ["/preview-wa.jpg"],
   },
   icons: {
     icon: "/nss-logo.png",
