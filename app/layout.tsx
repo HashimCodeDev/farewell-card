@@ -25,8 +25,30 @@ const libreBaskerville = Libre_Baskerville({
 });
 
 export const metadata: Metadata = {
-  title: "NSS MEC Farewell 2026",
-  description: "A cinematic digital invitation for NSS MEC Farewell 2026",
+  metadataBase: new URL("https://farewell-card-seven.vercel.app/"),
+  title: "NSS MEC – Farewell 2026",
+  description: "Open the envelope to view your invitation.",
+  openGraph: {
+    title: "NSS MEC – Farewell 2026",
+    description: "Open the envelope to view your invitation.",
+    url: "https://farewell-card-seven.vercel.app/",
+    siteName: "NSS MEC Farewell",
+    images: [
+      {
+        url: "/preview.png",
+        width: 1200,
+        height: 630,
+        alt: "NSS MEC Farewell Invitation",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "NSS MEC – Farewell 2026",
+    description: "Open the envelope to view your invitation.",
+    images: ["/preview.png"],
+  },
   icons: {
     icon: "/nss-logo.png",
     shortcut: "/nss-logo.png",
