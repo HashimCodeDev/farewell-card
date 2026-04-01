@@ -96,7 +96,7 @@ body::before {
   position: relative;
   margin: clamp(0.6rem, 2vw, 1.2rem) auto 0;
   width: 100%;
-  max-width: min(96vw, 980px);
+  max-width: min(96vw, 1100px);
   min-height: clamp(500px, 76vh, 820px);
   display: flex;
   align-items: center;
@@ -110,7 +110,7 @@ body::before {
 
 .envelope-shell {
   position: relative;
-  width: clamp(270px, 34vw, 360px);
+  width: clamp(300px, 38vw, 420px);
   max-width: 100%;
   aspect-ratio: 1.45;
   margin-top: 0;
@@ -274,7 +274,7 @@ body::before {
   right: 0;
   bottom: clamp(16%, 19%, 24%);
   width: 100%;
-  max-width: min(100%, 760px);
+  max-width: min(100%, 860px);
   margin: 0 auto;
   z-index: 4;
   overflow: visible;
@@ -463,7 +463,7 @@ body::before {
 
   .envelope-stage {
     width: 100%;
-    max-width: 420px;
+    max-width: 460px;
     min-height: clamp(430px, 70vh, 620px);
     padding-top: clamp(1rem, 4vw, 1.6rem);
   }
