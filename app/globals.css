@@ -463,9 +463,13 @@ body::before {
 
   .envelope-stage {
     width: 100%;
-    max-width: 460px;
+    max-width: 520px;
     min-height: clamp(430px, 70vh, 620px);
     padding-top: clamp(1rem, 4vw, 1.6rem);
+  }
+
+  .envelope-shell {
+    width: min(88vw, 460px);
   }
 
   .card-stage-wrap {
